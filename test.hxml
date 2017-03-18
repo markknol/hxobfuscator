@@ -1,0 +1,14 @@
+-cp test
+-main Main
+-lib hxminifier
+-lib closure
+-lib hxnodejs
+-js bin2/test.js
+
+--next
+
+-cmd node bin2/test.js
+
+--next
+
+-cmd node bin2/test.min.js
