@@ -1,13 +1,13 @@
 -cp test
 -main Main
 -lib hxobfuscator
--lib closure
 -lib hxnodejs
 -js bin2/test.js
+-D STRIP_CHARS
 
---next
+#--next
 
--cmd node bin2/test.js
+#-cmd node bin2/test.js
 
 --next
 
