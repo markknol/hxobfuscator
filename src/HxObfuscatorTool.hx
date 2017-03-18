@@ -5,7 +5,7 @@ using StringTools;
  * In case you don't want to use closure compiler, this removes unnecessary chars from the build.
  * @author Mark Knol
  */
-class HxMinfierTool
+class HxObfuscatorTool
 {
 	public static function main() 
 	{

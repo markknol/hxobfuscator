@@ -1,6 +1,6 @@
 {
-  "name": "hxminifier",
-  "url" : "https://github.com/markknol/hxminifier/",
+  "name": "hxobfuscator",
+  "url" : "https://github.com/markknol/hxobfuscator/",
   "license": "MIT",
   "tags": [
 	"js",

@@ -1,6 +1,6 @@
 -cp test
 -main Main
--lib hxminifier
+-lib hxobfuscator
 -lib closure
 -lib hxnodejs
 -js bin2/test.js

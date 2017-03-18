@@ -11,7 +11,7 @@ using StringTools;
  * Attempt to minify private fields in certain packages. 
  * @author Mark Knol
  */
-class HxMinifier
+class HxObfuscator
 {
 	public static function use()
 	{
@@ -101,7 +101,7 @@ class HxMinifier
 			#if STRIP_CHARS
 			Context.onAfterGenerate(function() 
 			{
-				var nekoClass = "HxMinfierTool"; 
+				var nekoClass = "HxObfuscatorTool"; 
 				Sys.command("haxe", ["-cp", Sys.getCwd() + "src", "-neko", '$nekoClass.n', "-main", '$nekoClass']);
 				Sys.command("neko", [Sys.getCwd() + '$nekoClass.n', Compiler.getOutput(), Compiler.getOutput().replace(".js", ".min.js")]);
 			});

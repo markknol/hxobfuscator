@@ -1,26 +1,26 @@
-# hxminifier
+# hxobfuscator
 
 > Renames private fields to small names for smaller output in Haxe/JavaScript builds. 
 > This library is build as helper for JavaScript minification tools (not included).
 
 ### Introduction
 
-In JavaScript, there is no such thing as private fields. Since minification tools like Google Closure Compiler aren't aware of Haxe generated code, they don't take in account such fields can be optimized. 
+In JavaScript, there is no such thing as private fields. Since obfuscation/minification tools like Google Closure Compiler aren't aware of Haxe generated code, they don't take in account such fields can be optimized. 
 The assumption of this library is that in general you never use reflection on private fields and therefore private fields could be safely renamed to smaller names without issues.
-Smaller field names means smaller output. hxminifier uses smart naming which also should lead to better GZIP compression. 
+Smaller field names means smaller output. hxobfuscator uses smart naming which also should lead to better GZIP compression. 
 
 ### Installation
 
 The project isn't on HaxeLib yet, so for now you can use:
 
-`haxelib git hxminifier https://github.com/markknol/hxminifier.git` 
+`haxelib git hxobfuscator https://github.com/markknol/hxobfuscator.git` 
 
 ### Usage
 
 Usage in haxe builds:
 
 ```hxml
--lib hxMinifier
+-lib hxobfuscator
 # use this library
 
 # When functions are broken runtime, disable renaming of function names
@@ -46,4 +46,4 @@ In Haxe/JavaScript you can rename anything with the `@:native("new_field_name")`
 
 - Always test your builds if it works at run-time, there is a chance it doesn't work.
 - In case it doesn't work for your build, you're just unlucky, remove the library.
-- Please provide your [feedback and ideas](https://github.com/markknol/hxminifier/issues).
+- Please provide your [feedback and ideas](https://github.com/markknol/hxobfuscator/issues).
