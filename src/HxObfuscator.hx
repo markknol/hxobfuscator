@@ -65,16 +65,18 @@ class HxObfuscator
 						*/
 						if (isWhiteListed)
 						{
+							var hasClassMeta = cl.meta.get().length > 0;
 							inline function processField(field:ClassField)
 							{
 								// search for private vars, (optional skip functions because they seem to fail when overriding, sometimes)
-								if (!field.isPublic #if SKIP_FUNCTIONS && !field.type.match(TFun(_,_))#end) 
+								if ((!hasClassMeta || !field.isPublic) #if SKIP_FUNCTIONS && !field.type.match(TFun(_,_))#end)
 								{
 									// skip constructor and getter/setter functions
 									if (field.name != "new" && !field.name.startsWith("get_") && !field.name.startsWith("set_"))
 									{
+										var hasFieldMeta = cl.meta.get().length > 0;
 										// skip fields with meta data
-										if (field.meta.get().length == 0)
+										if (!hasFieldMeta)
 										{
 											field.meta.add(":native", [macro $v {getId(fid++)}], Context.currentPos());
 											count ++;
