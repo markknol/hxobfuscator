@@ -30,6 +30,8 @@ class HxObfuscatorTool
 			trace("removed first line");
 		}
 		
+		content = content.replace('" + "', ""); // strip unconcatenated strings
+		
 		inline function minify(value:String) 
 			return value
 				.replace("\t", "")
@@ -51,9 +53,14 @@ class HxObfuscatorTool
 				.replace(" > ", ">")
 				.replace("; ", ";")
 				.replace(" : ", ":")
+				.replace(" / ", "/")
+				.replace(" * ", "*")
 				.replace(" + ", "+")
 				.replace(" - ", "-")
-				.replace("  ", "")
+				.replace(" & ", "&")
+				.replace(" | ", "|")
+				.replace(" ^ ", "^")
+				.replace("  ", " ")
 				.replace("{ ", "{")
 				.replace("} ", "}")
 				.replace(" {", "{")
@@ -72,7 +79,7 @@ class HxObfuscatorTool
 			content = ereg.matchedRight();
 		}
 	
-		var content = replaced + content;
+		var content = replaced + minify(content);
 		var minifiedSize = content.length;
 		
 		trace((Std.int((1 - minifiedSize / initialSize) * 1000) / 10) + '% smaller ($minifiedSize/$initialSize)');
