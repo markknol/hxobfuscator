@@ -26,16 +26,17 @@ class HxObfuscator
 			return chars[Std.int((id / 10) % chars.length)] + (Std.int(id / 530) * 10 + (id % 10));
 		}
 		
-		var forbiddenMeta = [":keep", ":extern", ":native", ":dce", ":analyzer", ":native"];
-		function hasValidMeta(metas:MetaAccess) 
+		var forbiddenMeta = [":native", ":extern",":coreApi", ":coreType"];
+		var skipMetaFilter = [":keep", ":keepInit", ":extern", ":native", ":dce", ":analyzer", ":coreApi", ":coreType"];
+		function hasValidMeta(metas:MetaAccess, filter:Array<String>) 
 		{
-			for (name in forbiddenMeta) if (metas.has(name)) return false;
+			for (name in filter) if (metas.has(name)) return false;
 			return true;
 		}
 		
 		Context.onGenerate(function(types:Array<Type>)
 		{
-			var optimizedCount = 0;
+			var optimizedFieldCount = 0;
 			var fieldCount = 0;
 			var optimizedTypeCount = 0;
 			var typeCount = 0;
@@ -52,7 +53,7 @@ class HxObfuscator
 						var cl:ClassType = cl;
 						
 						// skip extern classes and interfaces
-						if (cl.isExtern || cl.isInterface || cl.meta.has(":coreType") || cl.name.indexOf("Map") != -1 || cl.name.indexOf("Hx") != -1 ) continue;
+						if (cl.isExtern || cl.isInterface || !hasValidMeta(cl.meta, forbiddenMeta) || cl.name.indexOf("Hx") != -1 ) continue;
 						
 						var startId =  0;
 						var superClass = cl.superClass;
@@ -78,7 +79,7 @@ class HxObfuscator
 						var hasClassMeta = cl.meta.get().length > 0;
 						
 						// minify class names
-						if (!hasClassMeta || hasValidMeta(cl.meta) || cl.isPrivate)
+						if (!hasClassMeta || hasValidMeta(cl.meta, skipMetaFilter) || cl.isPrivate)
 						{
 							optimizedTypeCount ++;
 							cl.meta.add(":native", [macro $v {getId(cid++)}], Context.currentPos());
@@ -129,9 +130,9 @@ class HxObfuscator
 									if (field.name != "new" && !field.name.startsWith("get_") && !field.name.startsWith("set_"))
 									{
 										// skip fields with meta data
-										if (hasValidMeta(field.meta))
+										if (hasValidMeta(field.meta, skipMetaFilter))
 										{
-											optimizedCount ++;
+											optimizedFieldCount ++;
 											
 											var newFieldName = getId(startId + fid++);
 											if (!hasFieldName(newFieldName))
@@ -158,7 +159,7 @@ class HxObfuscator
 				}
 			}
 			
-			trace("optimized fields: " + optimizedCount + "/" + fieldCount);
+			trace("optimized fields: " + optimizedFieldCount + "/" + fieldCount);
 			trace("optimized types: " + optimizedTypeCount + "/" + typeCount);
 		});
 		
@@ -167,7 +168,6 @@ class HxObfuscator
 			function getDir(?pos:PosInfos) return Path.normalize(Path.directory(pos.fileName) + "\\..\\" )  + "/";
 			
 			//trace("`-lib closure` not found, uses simple minfication");
-			#if STRIP_CHARS
 			Context.onAfterGenerate(function() 
 			{
 				var nekoClass = "HxObfuscatorTool"; 
@@ -178,7 +178,6 @@ class HxObfuscator
 				Sys.command("neko", ['$nekoClass.n', cwd + Compiler.getOutput(), cwd + Compiler.getOutput().replace(".js", ".min.js")]);
 				Sys.setCwd(cwd);
 			});
-			#end
 		}
 		#end
 	}
