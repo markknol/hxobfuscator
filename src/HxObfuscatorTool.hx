@@ -53,6 +53,7 @@ class HxObfuscatorTool
 				.replace(" > ", ">")
 				.replace("; ", ";")
 				.replace(" : ", ":")
+				.replace(" ? ", "?")
 				.replace(" / ", "/")
 				.replace(" * ", "*")
 				.replace(" + ", "+")
@@ -75,7 +76,7 @@ class HxObfuscatorTool
 		var replaced = "";
 		while(ereg.match(content))
 		{
-			replaced += minify(minify(ereg.matchedLeft())) + ereg.matched(1) + ereg.matched(2) + ereg.matched(3);
+			replaced += minify(ereg.matchedLeft()) + ereg.matched(1) + ereg.matched(2) + ereg.matched(3);
 			content = ereg.matchedRight();
 		}
 	
