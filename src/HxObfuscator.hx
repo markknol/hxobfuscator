@@ -175,7 +175,8 @@ class HxObfuscator
 				
 				Sys.setCwd(getDir());
 				Sys.command("haxe", ["-cp", "src", "-neko", '$nekoClass.n', "-main", '$nekoClass']);
-				Sys.command("neko", ['$nekoClass.n', cwd + Compiler.getOutput(), cwd + Compiler.getOutput().replace(".js", ".min.js")]);
+				var output = Path.isAbsolute(Compiler.getOutput()) ? Compiler.getOutput() :  cwd + Compiler.getOutput();
+				Sys.command("neko", ['$nekoClass.n', output, output.replace(".js", ".min.js")]);
 				Sys.setCwd(cwd);
 			});
 		}
