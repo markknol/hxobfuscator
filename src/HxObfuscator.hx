@@ -1,3 +1,5 @@
+import haxe.PosInfos;
+import haxe.io.Path;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Type;
@@ -38,8 +40,10 @@ class HxObfuscator
 						// skip extern classes and interfaces
 						if (cl.isExtern || cl.isInterface || cl.meta.has(":coreType")) continue;
 						
+						var hasClassMeta = cl.meta.get().length > 0;
+							
 						// minify private class names
-						if(cl.isPrivate) cl.meta.add(":native", [macro $v {getId(cid++)}], Context.currentPos());
+						if(!hasClassMeta || cl.isPrivate) cl.meta.add(":native", [macro $v {getId(cid++)}], Context.currentPos());
 						
 						// reset new field id
 						var fid = 0;
@@ -65,7 +69,6 @@ class HxObfuscator
 						*/
 						if (isWhiteListed)
 						{
-							var hasClassMeta = cl.meta.get().length > 0;
 							inline function processField(field:ClassField)
 							{
 								// search for private vars, (optional skip functions because they seem to fail when overriding, sometimes)
@@ -98,14 +101,20 @@ class HxObfuscator
 		});
 		
 		if (!Context.defined("closure"))
-		{
+		{ 
+			function getDir(?pos:PosInfos) return Path.normalize(Path.directory(pos.fileName) + "\\..\\" )  + "/";
+			
 			//trace("`-lib closure` not found, uses simple minfication");
 			#if STRIP_CHARS
 			Context.onAfterGenerate(function() 
 			{
 				var nekoClass = "HxObfuscatorTool"; 
-				Sys.command("haxe", ["-cp", Sys.getCwd() + "src", "-neko", '$nekoClass.n', "-main", '$nekoClass']);
-				Sys.command("neko", [Sys.getCwd() + '$nekoClass.n', Compiler.getOutput(), Compiler.getOutput().replace(".js", ".min.js")]);
+				var cwd = Sys.getCwd();
+				
+				Sys.setCwd(getDir());
+				Sys.command("haxe", ["-cp", "src", "-neko", '$nekoClass.n', "-main", '$nekoClass']);
+				Sys.command("neko", ['$nekoClass.n', cwd + Compiler.getOutput(), cwd + Compiler.getOutput().replace(".js", ".min.js")]);
+				Sys.setCwd(cwd);
 			});
 			#end
 		}
