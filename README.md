@@ -7,6 +7,7 @@
 
 In JavaScript, there is no such thing as private fields. Since obfuscation/minification tools like Google Closure Compiler aren't aware of Haxe generated code, they don't take in account such fields can be optimized. 
 The assumption of this library is that in general you never use reflection on private fields and therefore private fields could be safely renamed to smaller names without issues.
+Public fields can also be obfuscated, but only when class doesn't contain meta data.
 Smaller field names means smaller output. hxobfuscator uses smart naming which also should lead to better GZIP compression. 
 
 ### Installation
@@ -26,7 +27,7 @@ Usage in haxe builds:
 # When functions are broken runtime, disable renaming of function names
 -D SKIP_FUNCTIONS
 
-# when closure isn't used, strips all /n /r /t from the output. WARN; this can break your strings.
+# when closure isn't used, strips many chars from the output. 
 -D STRIP_CHARS
 
 
@@ -36,7 +37,7 @@ Usage in haxe builds:
 
 ### Enabling Google Closure Compiler
 
-Use the [closure haxelib](https://lib.haxe.org/p/closure/), add `-lib closure` to your build.hxml. 
+Use the [closure haxelib](https://lib.haxe.org/p/closure/), add `-lib closure` to your build.hxml. Also add this lib **after** `-lib hxobfuscator` for correct processing order.
 
 ### How does it work?
 
