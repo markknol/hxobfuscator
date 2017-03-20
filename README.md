@@ -43,6 +43,11 @@ Use the [closure haxelib](https://lib.haxe.org/p/closure/), add `-lib closure` t
 
 In Haxe/JavaScript you can rename anything with the `@:native("new_field_name")` metadata. This libray adds the `@:native` metadata on as much private fields as possible. If the field already has another meta data, the field is skipped. In my assumption its safer to keep it as is in that case, but this might change later.
 
+### Status
+
+This library is very new, the obfuscator can break your build at runtime, always test the project in the browser yourself.
+I have still quite some issues with functions that get obfuscated. Use `-D SKIP_FUNCTIONS` when this is the case. The lib doesn't work on all of my project, but I have good hopes to make it find out what the issue is.
+
 ### Results
 
 These are the first results of a relative small Haxe/JavaScript project. This project still needs SKIP_FUNCTIONS because otherwise it didn't run, still the results are promising:
@@ -57,3 +62,4 @@ These are the first results of a relative small Haxe/JavaScript project. This pr
 - Always test your builds if it works at run-time, there is a chance it doesn't work.
 - In case it doesn't work for your build, you're just unlucky, remove the library.
 - Please provide your [feedback and ideas](https://github.com/markknol/hxobfuscator/issues).
+
