@@ -20,7 +20,7 @@ The project isn't on HaxeLib yet, so for now you can use:
 
 Usage in haxe builds:
 
-```hxml
+```shell
 -lib hxobfuscator
 # use this library
 
