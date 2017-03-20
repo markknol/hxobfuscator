@@ -11,6 +11,8 @@ class Test1
 	private var longname2 = Math.random();
 	private var wiuerhwqr = {x:123, y:456};
 	
+	var map1 = [ 1 => "hey"];
+	var map2 = [ "hey" => 1];
 	private var publicThing = new PublicThing();
 	
 	
@@ -30,6 +32,8 @@ class Test1
 	{
 		trace(longname1 +"-"+ longname2);
 		
+		trace(map1);
+		trace(map2);
 		trace(privateFunction1());
 		trace(privateFunction2());
 		

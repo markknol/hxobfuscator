@@ -12,11 +12,19 @@ import tests.TestEnum;
  */
 class Main 
 {
+	private var test1 = new Test1();
+	var test2a = new Test2();
+	var test2b = new Test2Abstract();
+	
+	function new() {
+		trace(test1);
+		trace(test2a);
+		trace(test2b);
+	}
 	
 	static function main() 
 	{
-		new Test1();
-		new Test2();
+		new Main();
 		
 		trace(EnumAbstractInt.MyVar);
 		trace(EnumAbstractString.MyVar2);

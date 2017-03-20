@@ -26,3 +26,12 @@ class Test2
 	}
 	
 }
+
+@:forward
+abstract Test2Abstract(Test2)
+{
+	public inline function new() 
+	{
+		this = new Test2();
+	}
+}
