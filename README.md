@@ -1,18 +1,18 @@
 # hxobfuscator
 
-> Renames private fields to small names for smaller output in Haxe/JavaScript builds. 
+> Shortens names for smaller output in Haxe/JavaScript builds. 
 > This library is build as helper for JavaScript minification tools (not included).
 
 ### Introduction
 
 In JavaScript, there is no such thing as private fields. Since obfuscation/minification tools like Google Closure Compiler aren't aware of Haxe generated code, they don't take in account such fields can be optimized. 
 The assumption of this library is that in general you never use reflection on private fields and therefore private fields could be safely renamed to smaller names without issues.
-Public fields can also be obfuscated, but only when class doesn't contain meta data.
+Public fields may also be obfuscated, but only when class isn't extern and doesn't contain meta data like `@:keep` etc.
 Smaller field names means smaller output. hxobfuscator uses smart naming which also should lead to better GZIP compression. 
 
 ### Installation
 
-The project isn't on HaxeLib yet, so for now you can use:
+The project isn't on [haxelib](https://lib.haxe.org) yet, for now you can use:
 
 `haxelib git hxobfuscator https://github.com/markknol/hxobfuscator.git` 
 
@@ -33,6 +33,7 @@ Usage in haxe builds:
 
 -lib closure
 # The closure library plugs in the google closure compiler into your build. Make sure you use it.
+# Add this library after `-lib hxobfuscator`
 ```
 
 ### Enabling Google Closure Compiler
@@ -41,12 +42,12 @@ Use the [closure haxelib](https://lib.haxe.org/p/closure/), add `-lib closure` t
 
 ### How does it work?
 
-In Haxe/JavaScript you can rename anything with the `@:native("new_field_name")` metadata. This libray adds the `@:native` metadata on as much private fields as possible. If the field already has another meta data, the field is skipped. In my assumption its safer to keep it as is in that case, but this might change later.
+In Haxe/JavaScript you can rewrites any path of a class or field during generation with the `@:native("new_field_name")` metadata. This libray attempts to add the `@:native` metadata on as much fields as possible. If the field already contains specific metadata, no rewrite is done. 
 
 ### Status
 
 This library is very new, the obfuscator can break your build at runtime, always test the project in the browser yourself.
-I have still quite some issues with functions that get obfuscated. Use `-D SKIP_FUNCTIONS` when this is the case. The lib doesn't work on all of my project, but I have good hopes to make it find out what the issue is.
+I have still quite some issues with functions that get obfuscated. Use `-D SKIP_FUNCTIONS` when this is the case. The lib doesn't work on all of my projects, but I have good hopes to make it find out what those issue are.
 
 ### Results
 
@@ -56,6 +57,8 @@ These are the first results of a relative small Haxe/JavaScript project. This pr
 | --- | --- | --- | --- | --- | --- |
 | **normal** | 53.5 Kb | 45.4 Kb (-15.5%) | 38.1 Kb (-28.7%) | 33.8 Kb (-36.8%) | 30.3 Kb (-43.3%) |
 | **gzipped** | 13.2 Kb | 12.1 Kb (-8.3%) | 11.2 Kb (-15.9%) | 10.5 Kb (-20.4%) | 9.93 Kb (-24.7%) |
+
+Note: Closure Compiler is using `SIMPLE_OPTIMIZATIONS`.
 
 ### Troubleshooting
 
