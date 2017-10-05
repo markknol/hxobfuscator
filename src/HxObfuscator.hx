@@ -47,7 +47,7 @@ class HxObfuscator
 						var cl:ClassType = cl;
 						
 						// skip extern classes and interfaces
-						if (cl.isExtern || cl.isInterface || !hasValidMeta(cl.meta, forbiddenMeta) || cl.name.indexOf("Hx") != -1 ) continue;
+						if (cl.isExtern || !hasValidMeta(cl.meta, forbiddenMeta) || cl.name.indexOf("Hx") != -1 ) continue;
 						
 						var superClass = cl.superClass;
 						if (superClass == null)
@@ -175,6 +175,7 @@ class HxObfuscator
 								
 								var newFieldName = !isExtendedClass ? getId(startId + fid++) : getIdFromSuperFunction(cl, field.name);
 								if (newFieldName == null) newFieldName = getId(startId + fid++);
+								
 								//var newFieldName = isExtendedClass ? getId(startId + fid++) : getIdFromMeta(cl, field.name);
 								if (!hasFieldName(newFieldName))
 								{
