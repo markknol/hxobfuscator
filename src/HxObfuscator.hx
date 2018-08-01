@@ -1,13 +1,17 @@
 import haxe.PosInfos;
 import haxe.io.Path;
+#if sys
+import sys.FileSystem;
+import sys.io.File;
+#end
+#if macro
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr.FieldType;
 import haxe.macro.Expr.Metadata;
 import haxe.macro.Type;
-import sys.FileSystem;
-import sys.io.File;
 using haxe.macro.Tools;
+#end
 
 using StringTools;
 
@@ -17,8 +21,10 @@ using StringTools;
  */
 class HxObfuscator
 {
+	static var nameCache:Map<String, String> = new Map();
 	static var forbiddenMeta = [":native", ":extern",":coreApi", ":coreType"];
 	static var skipMetaFilter = [":keep", ":keepInit", ":extern", ":native", ":dce", ":analyzer", ":coreApi", ":coreType"];
+	static var skipClassNames = ["StringMap", "ObjectMap", "IntMap","List","IMap","Map_Impl_","js_Boot","Std","Math"];
 	
 	static var chars = "_aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ".split("");
 	
@@ -28,12 +34,19 @@ class HxObfuscator
 	static var typeCount = 0;
 	
 	static var cid = 0;
+	static var nameId = 0;
+	
+	static var logContent:String = "";
+	static inline function log<T>(value:T) logContent += value + "\r\n";
+	
+	static function main() { }
 	
 	public static function use()
 	{
 		#if !display
 		Context.onGenerate(function(types:Array<Type>)
 		{
+			var interfaceTypes:Array<ClassType> = [];
 			var rootClassTypes:Array<ClassType> = [];
 			var extendedClassTypes:Array<ClassType> = [];
 			
@@ -46,11 +59,42 @@ class HxObfuscator
 						
 						var cl:ClassType = cl;
 						
-						// skip extern classes and interfaces
-						if (cl.isExtern || !hasValidMeta(cl.meta, forbiddenMeta) || cl.name.indexOf("Hx") != -1 ) continue;
+						// skip extern classes 
+						if (cl.isExtern) 
+						{
+							log( "Skipped (extern): " + cl.name);
+							continue;
+						}
+						// skip classes with forbidden meta data
+						if (!hasValidMeta(cl.meta, forbiddenMeta)) 
+						{
+							log( "Skipped (meta): " + cl.name);
+							continue;
+						}
+						// skip classes that start with Hx (HxOverrides and friends)
+						if (cl.name.startsWith("Hx") || cl.name.startsWith("hx_")|| cl.name.startsWith("$")) 
+						{
+							log( "Skipped (hx): " + cl.name);
+							continue;
+						}
 						
-						var superClass = cl.superClass;
-						if (superClass == null)
+						if (skipClassNames.indexOf(cl.name) > -1) 
+						{
+							log( "Skipped (className): " + cl.name);
+							continue;
+						}
+						
+						if (isIterator(cl)) 
+						{
+							log( "Skipped (iterator): " + cl.name);
+							continue;
+						}
+						
+						if (cl.isInterface) 
+						{
+							interfaceTypes.push(cl);
+						}
+						else if (cl.superClass == null)
 						{
 							rootClassTypes.push(cl);
 						}
@@ -63,14 +107,23 @@ class HxObfuscator
 				}
 			}
 			
-			processClassType(rootClassTypes, false);
-			processClassType(extendedClassTypes, true);
+			processClassType(interfaceTypes);
+			processClassType(rootClassTypes);
+			processClassType(extendedClassTypes);
 			
 			trace("optimized fields: " + optimizedFieldCount + "/" + fieldCount);
 			trace("optimized types: " + optimizedTypeCount + "/" + typeCount);
+			
+			File.saveContent("obfuscator.log", logContent);
+			logContent = logContent.replace(":", "</td><td>");
+			logContent = logContent.replace("(", "</td><td>");
+			logContent = logContent.replace(")", "</td><td>");
+			logContent = logContent.replace("\r\n", "</td></tr><tr><td>");
+			logContent = logContent = "<table style='width:100%'><tr><td>" + logContent + "</td></tr></table>";
+			File.saveContent("obfuscator.html", logContent);
 		});
 		
-		if (!Context.defined("closure"))
+		if (!Context.defined("closure") && !Context.defined("uglifyjs"))
 		{ 
 			function getDir(?pos:PosInfos) return Path.normalize(Path.directory(pos.fileName) + "\\..\\" )  + "/";
 			
@@ -90,61 +143,40 @@ class HxObfuscator
 		#end
 	}
 	
-	static function processClassType(types:Array<ClassType>, isExtendedClass:Bool)
+	private static function isIterator(cl:ClassType):Bool {
+		var fields = cl.fields.get();
+		var hasHasNext = false;
+		var hasNext = false;
+		
+		for (f in fields) {
+			if (f.name == "iterator") return true; // iterable
+			if (f.name == "hasNext") hasHasNext = true; // iterator
+			if (f.name == "next") hasNext = true; // iterator
+			if (hasNext && hasHasNext) return true;
+		}
+		return false;
+	}
+	
+	static function processClassType(types:Array<ClassType>)
 	{
 		for (cl in types)
 		{
-			var superClass = cl.superClass;
-			var startId =  0;
-			while ( superClass != null)
-			{
-				startId += superClass.t.get().fields.get().length;
-				superClass = superClass.t.get().superClass;
-			}
-			
-			function hasFieldName(name:String)
-			{
-				var superClass = cl;
-				while ( superClass.superClass != null)
-				{
-					superClass = superClass.superClass.t.get();
-					var fields = superClass.fields.get().concat(superClass.statics.get());
-					for (f in fields) if (f.name == name) return true;
-				}
-				 return false;
-			}
-			
-			
 			var hasClassMeta = cl.meta.get().length > 0;
 			
 			// minify class names
 			if (!hasClassMeta || hasValidMeta(cl.meta, skipMetaFilter) || cl.isPrivate)
 			{
 				optimizedTypeCount ++;
-				cl.meta.add(":native", [macro $v {getId(cid++)}], Context.currentPos());
+				cl.meta.add(":native", [macro $v {getId(cl.pack.join(".") + cl.name)}], Context.currentPos());
+				log( "Renamed  (type): " + cl.name + " = " + getId(cl.name));
+			} else {
+				break;
 			}
-			
-			// reset new field id
-			var fid = 0;
-
 			var fields:Array<ClassField> = cl.fields.get();
 			var statics:Array<ClassField> = cl.statics.get();
 
 			// search if pack is whitelisted
 			var isWhiteListed = true;
-			/*
-			// TODO: Find out how to whitelist/blacklist packages
-			var classPack = cl.pack.join(".");
-			var isWhiteListed = false;
-			for (pack in whiteListedPackages)
-			{
-				if (classPack.indexOf(pack) != -1)
-				{
-					isWhiteListed = true;
-					break;
-				}
-			}
-			*/
 			if (isWhiteListed)
 			{
 				function processField(field:ClassField)
@@ -165,6 +197,7 @@ class HxObfuscator
 					{
 						//trace(field.type.toString());
 						//trace(field.type);
+						
 						// skip constructor and getter/setter functions
 						if (field.name != "new" && !field.name.startsWith("get_") && !field.name.startsWith("set_"))
 						{
@@ -173,19 +206,13 @@ class HxObfuscator
 							{
 								optimizedFieldCount ++;
 								
-								var newFieldName = !isExtendedClass ? getId(startId + fid++) : getIdFromSuperFunction(cl, field.name);
-								if (newFieldName == null) newFieldName = getId(startId + fid++);
+								var newFieldName = getId(field.name);
 								
-								//var newFieldName = isExtendedClass ? getId(startId + fid++) : getIdFromMeta(cl, field.name);
-								if (!hasFieldName(newFieldName))
-								{
-									//trace("new name:" + newFieldName);
-									field.meta.add(":native", [macro $v{newFieldName}], Context.currentPos());
-								}
-								else 
-								{
-									//trace("found name: " + newFieldName); 
-								}
+								field.meta.add(":native", [macro $v{newFieldName}], Context.currentPos());
+								
+								var what = field.type.match(TFun(_, _)) ? "function" : "field";
+								log( "Renamed ("+what+"): " + cl.name + "." + field.name + " = " + newFieldName);
+							
 							}
 						}
 					}
@@ -201,50 +228,20 @@ class HxObfuscator
 	}
 	
 	
-	// find value of `@:native` in list of fields
-	static function findMetaInFields(fields:Array<ClassField>, fieldName:String)
-	{
-		for (field in fields)
-		{
-			var field:ClassField = field;
-			if (field.name == fieldName)
-			{
-				var meta:Metadata = field.meta.extract(":native");
-				if (meta.length > 0)
-				{
-					return meta[0].params[0].getValue();
-				}
-			}
-		}
-		return null;
-	}
-	
-	// used to find @:native field name from super classes, since those names should be the same for overridden fields. 
-	// This is probably slow.
-	static function getIdFromSuperFunction(cl:ClassType, fieldName:String):String
-	{
-		var superClass = cl.superClass;
-		while (superClass != null)
-		{
-			var cl:ClassType = superClass.t.get();
-			
-			// first process fields
-			var id:String = findMetaInFields(cl.fields.get(), fieldName);
-			// then  process static fields
-			if (id == null) id = findMetaInFields(cl.statics.get(), fieldName);
-			// when found, return it
-			if (id != null) return id;
-			// otherwise continue in superclass
-			superClass = cl.superClass;
-		}
-		
-		return null;
-	}
-	
 	// generate small 2-char-length fieldname
-	static inline function getId(id:Int):String
+	static inline function getShortId(id:Int):String
 	{
 		return chars[Std.int((id / 10) % chars.length)] + (Std.int(id / 530) * 10 + (id % 10));
+	}
+	
+	static function getId(name:String) {
+		if (nameCache.exists(name)) {
+			return nameCache.get(name);
+		} else {
+			var id = getShortId(nameId ++ );
+			nameCache.set(name, id);
+			return id;
+		}
 	}
 	
 	static function hasValidMeta(metas:MetaAccess, filter:Array<String>):Bool

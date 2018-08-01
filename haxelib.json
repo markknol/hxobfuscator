@@ -3,18 +3,18 @@
   "url" : "https://github.com/markknol/hxobfuscator/",
   "license": "MIT",
   "tags": [
-	"js",
-	"uglify",
-	"minify",
-	"obfuscation",
-	"closure"
+    "js",
+    "uglify",
+    "minify",
+    "obfuscation",
+    "closure"
   ],
   "description": "Renames private fields to small names for smaller output. Intended to work in addition to Google Closure Compiler.",
-  "version": "0.1",
+  "version": "0.0.1",
   "classPath": "src",
   "releasenote": "Initial release",
   "contributors": [
-	"markknol"
+    "markknol"
   ],
   "dependencies": {
   }
