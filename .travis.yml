@@ -1,0 +1,23 @@
+sudo: required
+dist: trusty
+
+language: haxe
+
+haxe:
+  - "3.4.4"
+  - "3.4.7"
+  - "development"
+
+matrix:
+  allow_failures:
+    - haxe: development
+
+install:
+  - yes | haxelib install all
+
+script:
+  - haxe build.hxml
+  - haxe test.hxml
+
+notifications:
+  email: false
