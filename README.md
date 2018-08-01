@@ -5,10 +5,9 @@
 
 ### Introduction
 
-In JavaScript, there is no such thing as private fields. Since obfuscation/minification tools like Google Closure Compiler aren't aware of Haxe generated code, they don't take in account such fields can be optimized. 
-The assumption of this library is that in general you never use reflection on private fields and therefore private fields could be safely renamed to smaller names without issues.
-Public fields may also be obfuscated, but only when class isn't extern and doesn't contain meta data like `@:keep` etc.
-Smaller field names means smaller output. hxobfuscator uses smart naming which also should lead to better GZIP compression. 
+Smaller field names means smaller output. 
+
+This tool tries to generate smaller/unreadable field names to help minifiers. Google Closure Compiler / UglifyJS aren't aware of Haxe generated code, they don't take in account what is exposed or not, we can help there. Lot of fields/functions that is _not_ exposed probably can be obfuscated. For example, private fields are probably fine for obfuscation, because in general you never use reflection on private fields, unless you decorate it with `@:keep`. Public fields may also be obfuscated, but is slightly trickier because they can be typed using interfaces/typedefs, and may be part of a class that is exposed using `@:expose` or maybe is extern field. This tool tries to reduce, by decorating `@:native` on fields/functions.
 
 ### Installation
 
