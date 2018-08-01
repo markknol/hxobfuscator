@@ -37,7 +37,11 @@ class HxObfuscator
 	static var nameId = 0;
 	
 	static var logContent:String = "";
-	static inline function log<T>(value:T) logContent += value + "\r\n";
+	static inline function log<T>(value:T) {
+		#if not_haxe_32_bitch
+		logContent += value + "\r\n";
+		#end
+	}
 	
 	static function main() { }
 	
