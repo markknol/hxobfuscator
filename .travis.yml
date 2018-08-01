@@ -16,6 +16,7 @@ install:
   - yes | haxelib install all
 
 script:
+  - haxelib dev hxobfuscator .
   - haxe build.hxml
   - haxe test.hxml
 
