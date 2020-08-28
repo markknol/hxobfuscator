@@ -26,7 +26,7 @@ class HxObfuscator
 	static var skipMetaFilter = [":keep", ":keepInit", ":extern", ":native", ":dce", ":analyzer", ":coreApi", ":coreType"];
 	static var skipClassNames = ["StringMap", "ObjectMap", "IntMap","List","IMap","Map_Impl_","js_Boot","Std","Math"];
 	
-	static var chars = "_aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ".split("");
+	static var chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").concat([for (i in 0...32) String.fromCharCode(i + 192)]);
 	
 	static var optimizedFieldCount = 0;
 	static var fieldCount = 0;
@@ -38,7 +38,7 @@ class HxObfuscator
 	
 	static var logContent:String = "";
 	static inline function log<T>(value:T) {
-		#if not_haxe_32_bitch
+		#if hxobfuscator_savelog
 		logContent += value + "\r\n";
 		#end
 	}
@@ -76,7 +76,7 @@ class HxObfuscator
 							continue;
 						}
 						// skip classes that start with Hx (HxOverrides and friends)
-						if (cl.name.startsWith("Hx") || cl.name.startsWith("hx_")|| cl.name.startsWith("$")) 
+						if (cl.name != null && (cl.name.startsWith("Hx") || cl.name.startsWith("hx_")|| cl.name.startsWith("$"))) 
 						{
 							log( "Skipped (hx): " + cl.name);
 							continue;
@@ -118,13 +118,15 @@ class HxObfuscator
 			trace("optimized fields: " + optimizedFieldCount + "/" + fieldCount);
 			trace("optimized types: " + optimizedTypeCount + "/" + typeCount);
 			
+			#if hxobfuscator_savelog
 			File.saveContent("obfuscator.log", logContent);
 			logContent = logContent.replace(":", "</td><td>");
 			logContent = logContent.replace("(", "</td><td>");
 			logContent = logContent.replace(")", "</td><td>");
-			logContent = logContent.replace("\r\n", "</td></tr><tr><td>");
+			logContent = logContent.replace("\r\n", "</td></tr>\n<tr><td>");
 			logContent = logContent = "<table style='width:100%'><tr><td>" + logContent + "</td></tr></table>";
 			File.saveContent("obfuscator.html", logContent);
+			#end
 		});
 		
 		if (!Context.defined("closure") && !Context.defined("uglifyjs"))
@@ -172,7 +174,7 @@ class HxObfuscator
 			{
 				optimizedTypeCount ++;
 				cl.meta.add(":native", [macro $v {getId(cl.pack.join(".") + cl.name)}], Context.currentPos());
-				log( "Renamed  (type): " + cl.name + " = " + getId(cl.name));
+				log( "Renamed (type): " + cl.name + " = " + getId(cl.name));
 			} else {
 				break;
 			}
@@ -232,10 +234,14 @@ class HxObfuscator
 	}
 	
 	
-	// generate small 2-char-length fieldname
-	static inline function getShortId(id:Int):String
-	{
-		return chars[Std.int((id / 10) % chars.length)] + (Std.int(id / 530) * 10 + (id % 10));
+	// generate small fieldname
+	static inline function getShortId(n:Int):String {
+		var s = "";
+		do {
+			s = chars[n & (64 - 1)] + s;
+			n >>>= 6;
+		} while (n > 0);
+		return s;
 	}
 	
 	static function getId(name:String) {
