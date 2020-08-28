@@ -45,8 +45,7 @@ class HxObfuscator {
 	];
 
 	static var chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		.split("")
-		.concat([for (i in 0...32) String.fromCharCode(i + 192)]);
+		.split("");
 
 	static var optimizedFieldCount = 0;
 	static var fieldCount = 0;
@@ -238,8 +237,8 @@ class HxObfuscator {
 	static inline function getShortId(n:Int):String {
 		var s = "";
 		do {
-			s = chars[n & (64 - 1)] + s;
-			n >>>= 6;
+			s = chars[n & (32 - 1)] + s;
+			n >>>= 5;
 		} while (n > 0);
 		return s;
 	}
