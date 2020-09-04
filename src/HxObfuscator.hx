@@ -66,7 +66,7 @@ class HxObfuscator {
 	static function main() {}
 
 	public static function use() {
-		#if !display
+		#if (!display && !hxobfuscator_disabled)
 		Context.onGenerate(function(types:Array<Type>) {
 			var interfaceTypes:Array<ClassType> = [];
 			var rootClassTypes:Array<ClassType> = [];
